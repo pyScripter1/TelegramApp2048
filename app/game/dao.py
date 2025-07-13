@@ -11,7 +11,7 @@ class UserDAO(Base):
 
     @classmethod
     async def find_one_or_none(cls, session: AsyncSession, filters: BaseModel):
-        # найти одну запись по фильтрам
+        # Найти одну запись по фильтрам
         filter_dict = filters.model_dump(exclude_unset=True)
         try:
             query = select(cls.model).filter_by(**filter_dict)
@@ -21,10 +21,9 @@ class UserDAO(Base):
         except SQLAlchemyError as e:
             raise
 
-    # метод для добавления пользователя в базу данных
     @classmethod
     async def add(cls, session: AsyncSession, values: BaseModel):
-        # добавить одну запись
+        # Добавить одну запись
         values_dict = values.model_dump(exclude_unset=True)
         new_instance = cls.model(**values_dict)
         session.add(new_instance)
@@ -37,7 +36,9 @@ class UserDAO(Base):
 
     @classmethod
     async def get_top_scores(cls, session: AsyncSession, limit: int = 20):
-        # получить топ рекордов, отсортированных от самого высокого к низкому, с добавлением номера
+        """
+        Получить топ рекордов, отсортированных от самого высокого к низкому, с добавлением номера позиции.
+        """
         try:
             query = (
                 select(cls.model.telegram_id, cls.model.first_name, cls.model.best_score)
@@ -46,22 +47,26 @@ class UserDAO(Base):
             )
             result = await session.execute(query)
             records = result.fetchall()
-            # Добавление поля 'rank' для нумерации позиций
+
+            # Добавление поля `rank` для нумерации позиций
             ranked_records = [
                 {"rank": index + 1, "telegram_id": record.telegram_id, "first_name": record.first_name,
                  "best_score": record.best_score}
                 for index, record in enumerate(records)
             ]
+
             return ranked_records
         except SQLAlchemyError as e:
             raise e
 
     @classmethod
     async def get_user_rank(cls, session: AsyncSession, telegram_id: int):
-        # получаем место пользователя в списке рекордов по telegram_id
-        # возвращает словарь с полями rank и best_score
+        """
+        Получить место пользователя по telegram_id в списке рекордов.
+        Возвращает словарь с полями rank и best_score.
+        """
         try:
-            # подзапрос для вычисления рангов на основе best score
+            # Подзапрос для вычисления рангов на основе best_score
             rank_subquery = (
                 select(
                     cls.model.telegram_id,
@@ -71,6 +76,7 @@ class UserDAO(Base):
                 .order_by(desc(cls.model.best_score))
                 .subquery()
             )
+
             # Запрос для получения ранга и best_score конкретного пользователя
             query = select(rank_subquery.c.rank, rank_subquery.c.best_score).where(
                 rank_subquery.c.telegram_id == telegram_id

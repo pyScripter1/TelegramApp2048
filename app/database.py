@@ -1,16 +1,16 @@
 from datetime import datetime
-from sqlalchemy import func, TIMESTAMP, Integer
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, AsyncSession
-from app.config import database_url
 from functools import wraps
 
-# создание асинхронного движка для подключения к базе данных
+from sqlalchemy import func, TIMESTAMP, Integer, text
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, AsyncSession
+
+from app.config import database_url
+
 engine = create_async_engine(url=database_url)
-# фабрика асинхронных сессий, нужна для создания сессий для запросов к бд
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
-# фабрика декораторов
+
 def connection(isolation_level=None):
     def decorator(method):
         @wraps(method)
@@ -20,6 +20,7 @@ def connection(isolation_level=None):
                     # Устанавливаем уровень изоляции, если передан
                     if isolation_level:
                         await session.execute(text(f"SET TRANSACTION ISOLATION LEVEL {isolation_level}"))
+
                     # Выполняем декорированный метод
                     return await method(*args, session=session, **kwargs)
                 except Exception as e:
@@ -29,21 +30,41 @@ def connection(isolation_level=None):
                     await session.close()  # Закрываем сессию
 
         return wrapper
+
     return decorator
 
-# абстрактный класс для моделей ORM. Будет родительским для всех моделей таблиц
-class Base(AsyncAttrs, DeclarativeBase):
-    __abstract__ = True # абстрактный класс чтобы измежать создание отдельной таблицы
 
-    id: Mapped[int] = mapped_column(Integer, primary_key = True, autoincrement=True)
+async def get_session() -> AsyncSession:
+    async with async_session_maker() as session:
+        try:
+            yield session  # Возвращаем сессию для использования
+        except Exception:
+            await session.rollback()  # Откатываем транзакцию при ошибке
+            raise
+        finally:
+            await session.close()  # Закрываем сессию
+
+
+class Base(AsyncAttrs, DeclarativeBase):
+    __abstract__ = True  # Базовый класс будет абстрактным, чтобы не создавать отдельную таблицу для него
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, server_default=func.now()
+        TIMESTAMP,
+        server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, server_default=func.now(), onupdate=func.now()
+        TIMESTAMP,
+        server_default=func.now(),
+        onupdate=func.now()
     )
 
     @classmethod
     @property
     def __tablename__(cls) -> str:
-        return cls.__name__.lower() + "s"
+        return cls.__name__.lower() + 's'
+
+    def to_dict(self) -> dict:
+        # Метод для преобразования объекта в словарь
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}

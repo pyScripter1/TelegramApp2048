@@ -1,16 +1,10 @@
 function KeyboardInputManager() {
   this.events = {};
 
-  if (window.navigator.msPointerEnabled) {
-    //Internet Explorer 10 style
-    this.eventTouchstart    = "MSPointerDown";
-    this.eventTouchmove     = "MSPointerMove";
-    this.eventTouchend      = "MSPointerUp";
-  } else {
-    this.eventTouchstart    = "touchstart";
-    this.eventTouchmove     = "touchmove";
-    this.eventTouchend      = "touchend";
-  }
+  // Для Telegram MiniApp используем pointer события
+  this.eventTouchstart = "pointerdown";
+  this.eventTouchmove = "pointermove";
+  this.eventTouchend = "pointerup";
 
   this.listen();
 }
@@ -78,19 +72,8 @@ KeyboardInputManager.prototype.listen = function () {
   var gameContainer = document.getElementsByClassName("game-container")[0];
 
   gameContainer.addEventListener(this.eventTouchstart, function (event) {
-    if ((!window.navigator.msPointerEnabled && event.touches.length > 1) ||
-        event.targetTouches.length > 1) {
-      return; // Ignore if touching with more than 1 finger
-    }
-
-    if (window.navigator.msPointerEnabled) {
-      touchStartClientX = event.pageX;
-      touchStartClientY = event.pageY;
-    } else {
-      touchStartClientX = event.touches[0].clientX;
-      touchStartClientY = event.touches[0].clientY;
-    }
-
+    touchStartClientX = event.clientX;
+    touchStartClientY = event.clientY;
     event.preventDefault();
   });
 
@@ -99,20 +82,8 @@ KeyboardInputManager.prototype.listen = function () {
   });
 
   gameContainer.addEventListener(this.eventTouchend, function (event) {
-    if ((!window.navigator.msPointerEnabled && event.touches.length > 0) ||
-        event.targetTouches.length > 0) {
-      return; // Ignore if still touching with one or more fingers
-    }
-
-    var touchEndClientX, touchEndClientY;
-
-    if (window.navigator.msPointerEnabled) {
-      touchEndClientX = event.pageX;
-      touchEndClientY = event.pageY;
-    } else {
-      touchEndClientX = event.changedTouches[0].clientX;
-      touchEndClientY = event.changedTouches[0].clientY;
-    }
+    var touchEndClientX = event.clientX;
+    var touchEndClientY = event.clientY;
 
     var dx = touchEndClientX - touchStartClientX;
     var absDx = Math.abs(dx);
@@ -123,6 +94,31 @@ KeyboardInputManager.prototype.listen = function () {
     if (Math.max(absDx, absDy) > 10) {
       // (right : left) : (down : up)
       self.emit("move", absDx > absDy ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+    }
+  });
+
+  // Bind arrow buttons
+  this.bindArrowButtons();
+};
+
+KeyboardInputManager.prototype.bindArrowButtons = function () {
+  var self = this;
+
+  var buttonMap = {
+    'up-btn': 0,    // Вверх
+    'right-btn': 1, // Вправо
+    'down-btn': 2,  // Вниз
+    'left-btn': 3   // Влево
+  };
+
+  Object.keys(buttonMap).forEach(function(className) {
+    var button = document.querySelector('.' + className);
+    if (button) {
+      // Используем pointerdown для всех устройств
+      button.addEventListener('pointerdown', function(event) {
+        event.preventDefault();
+        self.emit("move", buttonMap[className]);
+      });
     }
   });
 };
@@ -139,6 +135,5 @@ KeyboardInputManager.prototype.keepPlaying = function (event) {
 
 KeyboardInputManager.prototype.bindButtonPress = function (selector, fn) {
   var button = document.querySelector(selector);
-  button.addEventListener("click", fn.bind(this));
-  button.addEventListener(this.eventTouchend, fn.bind(this));
+  button.addEventListener('pointerdown', fn.bind(this));
 };

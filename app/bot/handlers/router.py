@@ -5,14 +5,13 @@ from app.game.dao import UserDAO
 from app.game.schemas import TelegramIDModel, UserModel
 from app.bot.keyboards.kbs import main_keyboard, record_keyboard
 from app.database import connection
-from sqlalchemy.ext.asyncio import AsyncSession
 
-router = Router() # инициализируем роутер
+router = Router()
 
-# первый запуск бота
+
 @router.message(CommandStart())
 @connection()
-async def cmd_start(message: Message, session: AsyncSession, **kwargs):
+async def cmd_start(message: Message, session, **kwargs):
     welcome_text = (
         "🎮 Добро пожаловать в игру 2048! 🧩\n\n"
         "Здесь вы сможете насладиться увлекательной головоломкой и проверить свои навыки. Вот что вас ждёт:\n\n"
@@ -40,13 +39,15 @@ async def cmd_start(message: Message, session: AsyncSession, **kwargs):
         await message.answer(welcome_text, reply_markup=main_keyboard())
 
     except Exception as e:
-        await message.answer("Произошла ошибка при обработке вашего запроса, пожалуйста попробуйте позже")
+        await message.answer("Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте снова позже.")
 
 
 @router.callback_query(F.data == 'show_my_record')
 @connection()
 async def get_user_rating(call: CallbackQuery, session, **kwargs):
     await call.answer()
+
+    # Удаление старого сообщения
     await call.message.delete()
 
     # Получаем позицию пользователя в рейтинге
@@ -54,7 +55,7 @@ async def get_user_rating(call: CallbackQuery, session, **kwargs):
     rank = record_info['rank']
     best_score = record_info['best_score']
 
-    # Формируем сообщение в зависимости от ранга
+    # Определяем текст сообщения в зависимости от ранга
     if rank == 1:
         text = (
             f"🥇 Поздравляем! Вы на первом месте с рекордом {best_score} очков! Вы — чемпион!\n\n"
@@ -68,8 +69,6 @@ async def get_user_rating(call: CallbackQuery, session, **kwargs):
         )
     elif rank == 3:
         text = (
-
-
             f"🥉 Отличный результат! Вы на третьем месте с {best_score} очками!\n\n"
             "Почти вершина! Попробуйте свои силы еще раз, нажав кнопку ниже, и возьмите золото!"
         )
@@ -80,4 +79,5 @@ async def get_user_rating(call: CallbackQuery, session, **kwargs):
             "подняться выше и побить свой рекорд!"
         )
 
+    # Отправляем новое сообщение с текстом и клавиатурой
     await call.message.answer(text, reply_markup=record_keyboard())
