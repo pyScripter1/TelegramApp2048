@@ -52,7 +52,8 @@ SQLAlchemy==2.0.35
 ```
 
 **Пример работы**
-<img width="611" height="452" alt="image" src="https://github.com/user-attachments/assets/78af24c3-fd92-4085-b332-b0241c818604" />
+
+<img width="450" height="350" alt="image" src="https://github.com/user-attachments/assets/78af24c3-fd92-4085-b332-b0241c818604" />
 <img width="469" height="818" alt="image" src="https://github.com/user-attachments/assets/354ad0cd-bf9e-4e2f-b892-8e820092b7b7" />
 
 **Протестировать игру можно здесь:**
