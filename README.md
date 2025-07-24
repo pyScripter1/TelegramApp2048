@@ -58,7 +58,7 @@ SQLAlchemy==2.0.35
 <img width="200" height="500" alt="image" src="https://github.com/user-attachments/assets/354ad0cd-bf9e-4e2f-b892-8e820092b7b7" />
 
 **Протестировать игру можно здесь:**
-
+[Клик](https://t.me/daniil_game_2048bot)
 
 
 
