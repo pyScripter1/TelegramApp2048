@@ -32,8 +32,11 @@ cd TelegramApp2048
 ```
 **2. Установите зависимости**
 `pip install -r requirements.txt`
+
 **3. Создайте файл .env с вашими настройками**
+
 **4. Запустите приложение**
+
 `uvicorn app.main:app --reload`
 
 **Зависимости**
