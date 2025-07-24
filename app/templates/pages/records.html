@@ -13,7 +13,6 @@
         <thead>
         <tr>
             <th>Место</th>
-            <th>Telegram ID</th>
             <th>Имя</th>
             <th>Очки</th>
         </tr>
@@ -26,7 +25,6 @@
                 {% if record.rank == 1 %}🥇{% elif record.rank == 2 %}🥈{% elif record.rank == 3 %}🥉{% else %}{{ record.rank }}{% endif %}
             </span>
             </td>
-            <td>{{ record.telegram_id }}</td>
             <td>{{ record.first_name }}</td>
             <td>{{ record.best_score }}</td>
         </tr>

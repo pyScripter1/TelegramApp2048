@@ -14,3 +14,9 @@ window.addEventListener('load', (event) => {
     }
 });
 
+// document.querySelector('.exit-btn').addEventListener('click', () => {
+//     // Закрыть MiniApp
+//     if (window.Telegram && window.Telegram.WebApp) {
+//         window.Telegram.WebApp.close();
+//     }
+// });
