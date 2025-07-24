@@ -31,13 +31,17 @@ git clone https://github.com/pyScripter1/TelegramApp2048.git
 cd TelegramApp2048
 ```
 **2. Установите зависимости**
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 **3. Создайте файл .env с вашими настройками**
 
 **4. Запустите приложение**
 
-`uvicorn app.main:app --reload`
+```
+uvicorn app.main:app --reload
+```
 
 **Зависимости**
 В проекте следующие зависимости:
